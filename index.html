@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User CRUD App</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+    }
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #0056b3;
+    }
+    .user-item {
+        margin-bottom: 10px;
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>User CRUD App</h1>
+    <h2>Add New User</h2>
+    <input type="text" id="firstName" placeholder="Enter First Name">
+    <input type="text" id="lastName" placeholder="Enter Last Name">
+    <input type="text" id="email" placeholder="Enter Email">
+    <input type="number" id="salary" placeholder="Enter Salary">
+    <button onclick="addUser()">Add User</button>
+    <h2>Users</h2>
+    <div id="users"></div>
+</div>
+
+<script>
+    const apiUrl = "https://crud-api-hazel.vercel.app"; // Adjust the API URL accordingly
+
+    // Function to fetch users from API
+    async function fetchUsers() {
+        const response = await fetch(`${apiUrl}/users`);
+        const data = await response.json();
+        return data;
+    }
+
+    // Function to display users
+    async function displayUsers() {
+        const usersContainer = document.getElementById("users");
+        usersContainer.innerHTML = "";
+        const users = await fetchUsers();
+        users.forEach(user => {
+            const userElement = document.createElement("div");
+            userElement.classList.add("user-item");
+            userElement.innerHTML = `
+                <h3>${user.firstName} ${user.lastName}</h3>
+                <p>Email: ${user.email}</p>
+                <p>Salary: ${user.salary}</p>
+                <button onclick="editUser('${user._id}')">Edit</button>
+                <button onclick="deleteUser('${user._id}')">Delete</button>
+            `;
+            usersContainer.appendChild(userElement);
+        });
+    }
+
+    // Function to add a new user
+    async function addUser() {
+        const firstName = document.getElementById("firstName").value;
+        const lastName = document.getElementById("lastName").value;
+        const email = document.getElementById("email").value;
+        const salary = document.getElementById("salary").value;
+        if (firstName && lastName && email && salary) {
+            const response = await fetch(`${apiUrl}/add`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ firstName, lastName, email, salary })
+            });
+            const data = await response.json();
+            console.log(data);
+            displayUsers();
+        } else {
+            alert("Please enter all fields!");
+        }
+    }
+
+    // Function to delete a user
+    async function deleteUser(id) {
+        const response = await fetch(`${apiUrl}/delete/${id}`, {
+            method: "DELETE"
+        });
+        const data = await response.json();
+        console.log(data);
+        displayUsers();
+    }
+
+    // Function to edit a user
+    async function editUser(id) {
+        const newName = prompt("Enter new name:");
+        const newEmail = prompt("Enter new email:");
+        const newSalary = prompt("Enter new salary:");
+        if (newName && newEmail && newSalary) {
+            const response = await fetch(`${apiUrl}/edit/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ firstName: newName, email: newEmail, salary: newSalary })
+            });
+            const data = await response.json();
+            console.log(data);
+            displayUsers();
+        } else {
+            alert("Please enter all fields!");
+        }
+    }
+
+    // Initial display of users
+    displayUsers();
+</script>
+</body>
+</html>
